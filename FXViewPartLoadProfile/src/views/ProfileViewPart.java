@@ -47,21 +47,23 @@ public class ProfileViewPart extends ViewPart {
 	
 	public static final String ID = "views.ProfileViewPart";
     private FXCanvas canvas;
-    private TreeTableView table;
     private final GridPane grid = new GridPane();
     private Scene scene;
     List<PV<Object, Object>> pvList = new ArrayList<PV<Object, Object>>();
+    
+    private final int NUM_LABELS = 1; //WARNING: if you modify the number of labels
+    								  //make sure to update the nested for loop in createAndAddLists
+    								  //so that the grid adds the labels like you want it to.
 
 	@Override
 	public void createPartControl(Composite parent) {
 		canvas = new FXCanvas(parent, SWT.NONE);
         canvas.setScene(createFxScene());
-        //new Thread(new SleeperThread()).start();
 	}
 	
 	private Scene createFxScene() {
         BorderPane pane = new BorderPane();
-        createLists(1);
+        createAndAddLists();
         pane.setCenter(grid);
         return new Scene(pane);
     }
@@ -72,22 +74,25 @@ public class ProfileViewPart extends ViewPart {
 
 	}
 	
-	public void createLists(int length) {
+	public void createAndAddLists() {
 		grid.getChildren().clear();
 		closePVs();
-		for(int i = 0; i < length; i++) {
-			for(int j = 0;j < length; j++) {
+		
+		//Add labels to grid
+		for(int i = 0; i < NUM_LABELS; i++) {
+			for(int j = 0;j < NUM_LABELS; j++) {
 				grid.add(new Text("" + i), i, j);
 			}
 		}
-		for(int i = 0; i < length; i++) {
-			pvList.add(PVManager.readAndWrite(channel("sim://noise"))
+		
+		//Set up PVs to update labels
+		for(int i = 0; i < NUM_LABELS; i++) {
+			pvList.add(PVManager.readAndWrite(channel("sim://noise")) //PVs receive noise as data
                     .timeout(TimeDuration.ofSeconds(5))
                     .readListener((PVReaderEvent<Object> event1) -> {
                     	Platform.runLater(()->{
-	                    	int randNum = (int)(Math.random()*pvList.size());
-	                    	
-	                    	((Text)(grid.getChildren().get(randNum)))
+	                    	int randNum = (int)(Math.random()*pvList.size()); 
+	                    	((Text)(grid.getChildren().get(randNum))) //Update a random label
 	                    		.setText(((VNumber)(pvList.get(randNum).getValue())).getValue().doubleValue() + "");
                     	});
                     })

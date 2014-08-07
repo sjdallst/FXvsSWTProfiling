@@ -37,30 +37,35 @@ public class ProfileViewPart extends ViewPart {
 	private List<Label> labelsList = new ArrayList<Label>();
 	List<PV<Object, Object>> pvList = new ArrayList<PV<Object, Object>>();
 	
+	private final int NUM_LABELS = 1;
+	
 	@Override
 	public void createPartControl(Composite parent) {
 		GridLayout layout = new GridLayout(10, true);
 		parent.setLayout(layout);
-		createLists(1, parent);
+		createLists(parent);
 		parent.layout();
 	}
 	
-	public void createLists(int length, Composite parent) {
+	public void createLists(Composite parent) {
 		labelsList.clear();
 		closePVs();
-		for(int i = 0; i < length; i++) {
+		
+		//Set up labels and add them to the list.
+		for(int i = 0; i < NUM_LABELS; i++) {
 			labelsList.add(new Label(parent, SWT.NONE));
 			labelsList.get(i).setText("" + i);
 		}
-		for(int i = 0; i < length; i++) {
-			pvList.add(PVManager.readAndWrite(channel("sim://noise"))
+		
+		//Set up PVs to update labels
+		for(int i = 0; i < NUM_LABELS; i++) {
+			pvList.add(PVManager.readAndWrite(channel("sim://noise")) //PVs receive noise
                     .timeout(TimeDuration.ofSeconds(5))
                     .readListener((PVReaderEvent<Object> event1) -> {
                     	Display.getDefault().asyncExec(()->{
                     		if(pvList.size() > 0) {
 		                    	int randNum = (int)(Math.random()*pvList.size());
-		                    	
-		                    	((Label)(labelsList.get(randNum)))
+		                    	((Label)(labelsList.get(randNum))) //Update random label
 		                    		.setText(((VNumber)(pvList.get(randNum).getValue())).getValue().doubleValue() + "");
 		                    	parent.layout();
                     		}
